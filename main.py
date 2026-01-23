@@ -11,6 +11,9 @@ def main():
     print(f"Screen width: {SCREEN_WIDTH}")
     print(f"Screen height: {SCREEN_HEIGHT}")
     pygame.init()
+    score = 0
+    lives = 3
+    font = pygame.font.Font(None, 36)
     clock = pygame.time.Clock()
     dt = 0
     updatable = pygame.sprite.Group()
@@ -32,19 +35,37 @@ def main():
                 return
         updatable.update(dt)
         for obj in asteroids:
+            center = pygame.Vector2(SCREEN_WIDTH / 2,SCREEN_HEIGHT / 2)
             for shot in shots:
                 if obj.collides_with(shot):
                     log_event("asteroid_shot")
                     obj.split()
+                    score += obj.score()
                     obj.kill()
                     shot.kill()
             if obj.collides_with(player):
-                log_event("player_hit")
-                print("Game over!")
-                sys.exit()
+                lives -= 1
+                player.kill()
+                if lives <= 0:
+                    log_event("player_hit")
+                    print(f"Score:{score}")
+                    print("Game over!")
+                    sys.exit()
+                else:
+                    # to remove the asteroids near re-spawn location
+                    for asteroid in asteroids:
+                        if asteroid.position.distance_to(center) < 200:
+                            asteroid.kill()
+                    player = Player(SCREEN_WIDTH / 2,SCREEN_HEIGHT / 2)
+                    break
         screen.fill("black")
         for obj in drawable:
             obj.draw(screen)
+        
+        score_text = font.render(f"Score: {score}", True, "white")
+        lives_text = font.render(f"Lives: {lives}", True, "white")
+        screen.blit(lives_text, (10,40))
+        screen.blit(score_text, (10, 10))
         pygame.display.flip()
 
 
